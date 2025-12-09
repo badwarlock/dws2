@@ -27,6 +27,26 @@ export interface TreeApiResponse {
 export interface TreeApiParams {
   depth: number;
   path_part?: string;
+  limit?: number;
+  skip?: number;
+}
+
+/**
+ * Параметры запроса для пагинированных accounts
+ */
+export interface PaginatedAccountsParams {
+  depth: number;
+  path_part: string;
+  limit: number;
+  skip: number;
+}
+
+/**
+ * Ответ API с пагинацией для accounts
+ */
+export interface PaginatedAccountsResponse {
+  count: number; // Общее количество accounts
+  data: TreeNode[] | null;
 }
 
 /**

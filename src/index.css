@@ -123,6 +123,17 @@ body {
   animation: spin 0.8s linear infinite;
 }
 
+/* Информационная строка виртуального списка */
+.virtual-info-row {
+  background-color: #fafafa;
+  border-top: 1px solid #e8e8e8;
+}
+
+.virtual-info-row:hover {
+  background-color: #fafafa;
+  cursor: default;
+}
+
 /* Типы узлов */
 .node-type {
   display: inline-block;

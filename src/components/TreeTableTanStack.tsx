@@ -8,6 +8,7 @@ import {
 import { useTreeLevel, usePrefetchTreeLevel } from '../hooks/useTreeData';
 import { useTreeState } from '../hooks/useTreeState';
 import { TreeNode } from '../types/tree';
+import { VirtualAccountsList } from './VirtualAccountsList';
 
 interface TreeTableTanStackProps {
   apiBaseUrl?: string;
@@ -197,26 +198,30 @@ const TreeTableRowWithData = memo<TreeTableRowWithDataProps>(
     const node = row.original as TreeNode;
     const childDepth = node.depth + 1;
     const pathPart = node.path.endsWith('/') ? node.path : `${node.path}/`;
+    const indent = node.depth * 20; // Отступ для дочерних элементов
 
-    // Загружаем дочерние элементы, если узел раскрыт
-    const shouldFetch = isExpanded && node.type !== 'account';
+    // Определяем, нужно ли использовать виртуальный список для accounts
+    const isLeafNode = node.type === 'leaf';
+    const shouldUseVirtualList = isExpanded && isLeafNode;
+
+    // Для node загружаем дочерние элементы обычным способом
+    const shouldFetchRegular = isExpanded && node.type === 'node';
 
     const { data: childData, isLoading, error } = useTreeLevel(
       { depth: childDepth, path_part: pathPart },
       {
-        enabled: shouldFetch,
+        enabled: shouldFetchRegular,
       }
     );
 
-    // Добавляем дочерние данные в состояние
+    // Добавляем дочерние данные в состояние (только для node)
     useEffect(() => {
-      if (childData?.data) {
+      if (childData?.data && node.type === 'node') {
         addTreeData(childData.data);
       }
-    }, [childData, addTreeData]);
+    }, [childData, addTreeData, node.type]);
 
     const canExpand = node.type !== 'account';
-    const indent = (node.depth) * 20; // Отступ для дочерних элементов
 
     return (
       <Fragment>
@@ -233,38 +238,52 @@ const TreeTableRowWithData = memo<TreeTableRowWithDataProps>(
           ))}
         </tr>
 
-        {/* Строка загрузки */}
-        {isExpanded && isLoading && (
-          <tr className="loading-row">
-            <td colSpan={4}>
-              <div style={{ paddingLeft: `${indent}px`, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="loading-spinner-small"></span>
-                <span style={{ color: '#666', fontSize: '13px' }}>Загрузка дочерних элементов...</span>
-              </div>
-            </td>
-          </tr>
+        {/* Виртуальный список для leaf-узлов (accounts) */}
+        {shouldUseVirtualList && (
+          <VirtualAccountsList
+            pathPart={pathPart}
+            depth={childDepth}
+            indent={indent}
+          />
         )}
 
-        {/* Строка ошибки */}
-        {isExpanded && error && (
-          <tr className="error-row">
-            <td colSpan={4}>
-              <div style={{ paddingLeft: `${indent}px`, color: '#ff4d4f', fontSize: '13px' }}>
-                ⚠️ Ошибка загрузки: {(error as Error).message}
-              </div>
-            </td>
-          </tr>
-        )}
+        {/* Обычная загрузка для node-узлов */}
+        {shouldFetchRegular && (
+          <Fragment>
+            {/* Строка загрузки */}
+            {isLoading && (
+              <tr className="loading-row">
+                <td colSpan={4}>
+                  <div style={{ paddingLeft: `${indent}px`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="loading-spinner-small"></span>
+                    <span style={{ color: '#666', fontSize: '13px' }}>Загрузка дочерних элементов...</span>
+                  </div>
+                </td>
+              </tr>
+            )}
 
-        {/* Строка "нет данных" */}
-        {isExpanded && !isLoading && !error && childData && (!childData.data || childData.data.length === 0) && (
-          <tr className="no-data-row">
-            <td colSpan={4}>
-              <div style={{ paddingLeft: `${indent}px`, color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
-                📭 Нет дочерних элементов
-              </div>
-            </td>
-          </tr>
+            {/* Строка ошибки */}
+            {error && (
+              <tr className="error-row">
+                <td colSpan={4}>
+                  <div style={{ paddingLeft: `${indent}px`, color: '#ff4d4f', fontSize: '13px' }}>
+                    ⚠️ Ошибка загрузки: {(error as Error).message}
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {/* Строка "нет данных" */}
+            {!isLoading && !error && childData && (!childData.data || childData.data.length === 0) && (
+              <tr className="no-data-row">
+                <td colSpan={4}>
+                  <div style={{ paddingLeft: `${indent}px`, color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
+                    📭 Нет дочерних элементов
+                  </div>
+                </td>
+              </tr>
+            )}
+          </Fragment>
         )}
       </Fragment>
     );
