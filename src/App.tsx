@@ -14,8 +14,11 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div style={{ padding: '20px' }}>
+      <div className="app-container">
         <h1>Tree Table Component</h1>
+        <p className="page-description">
+          Иерархическое дерево с lazy loading и prefetching. Наведите курсор для предзагрузки, кликните для раскрытия узлов.
+        </p>
         <TreeTableTanStack />
       </div>
     </QueryClientProvider>

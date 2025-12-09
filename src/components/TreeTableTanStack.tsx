@@ -73,7 +73,7 @@ export const TreeTableTanStack = memo<TreeTableTanStackProps>(() => {
           return (
             <div style={{ paddingLeft: `${indent}px`, display: 'flex', alignItems: 'center' }}>
               {canExpand && (
-                <span style={{ marginRight: '8px' }}>
+                <span className="expand-icon">
                   {expanded ? '▼' : '▶'}
                 </span>
               )}
@@ -85,6 +85,14 @@ export const TreeTableTanStack = memo<TreeTableTanStackProps>(() => {
       {
         accessorKey: 'type',
         header: 'Type',
+        cell: ({ row }) => {
+          const node = row.original;
+          return (
+            <span className={`node-type node-type-${node.type}`}>
+              {node.type}
+            </span>
+          );
+        },
       },
       {
         accessorKey: 'path',
@@ -107,32 +115,45 @@ export const TreeTableTanStack = memo<TreeTableTanStackProps>(() => {
 
   // Отображение состояний загрузки и ошибок
   if (isRootLoading) {
-    return <div>Загрузка...</div>;
+    return (
+      <div className="tree-table-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <div>Загрузка данных...</div>
+        </div>
+      </div>
+    );
   }
 
   if (rootError) {
-    return <div>Ошибка: {(rootError as Error).message}</div>;
+    return (
+      <div className="tree-table-container">
+        <div className="error-state">
+          <div>⚠️ Ошибка загрузки</div>
+          <div>{(rootError as Error).message}</div>
+        </div>
+      </div>
+    );
   }
 
   if (!rootData?.data || rootData.data.length === 0) {
-    return <div>Нет данных</div>;
+    return (
+      <div className="tree-table-container">
+        <div className="no-data-state">
+          <div>📭 Нет данных для отображения</div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div style={{ width: '100%', overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <div className="tree-table-container">
+      <table className="tree-table">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  style={{
-                    textAlign: 'left',
-                    padding: '8px',
-                    borderBottom: '2px solid #ddd',
-                  }}
-                >
+                <th key={header.id}>
                   {header.isPlaceholder
                     ? null
                     : flexRender(header.column.columnDef.header, header.getContext())}
@@ -198,15 +219,12 @@ const TreeTableRowWithData = memo<TreeTableRowWithDataProps>(
 
     return (
       <tr
+        className={canExpand ? 'expandable' : ''}
         onMouseEnter={onMouseEnter}
         onClick={canExpand ? onClick : undefined}
-        style={{
-          cursor: canExpand ? 'pointer' : 'default',
-          borderBottom: '1px solid #eee',
-        }}
       >
         {row.getVisibleCells().map((cell: any) => (
-          <td key={cell.id} style={{ padding: '8px' }}>
+          <td key={cell.id}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </td>
         ))}

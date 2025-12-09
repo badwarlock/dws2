@@ -1,0 +1,162 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Стили для компонента дерева */
+.tree-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.tree-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tree-table thead {
+  background-color: #fafafa;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.tree-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #666;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tree-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.tree-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.tree-table tbody tr.expandable {
+  cursor: pointer;
+}
+
+.tree-table td {
+  padding: 12px 16px;
+  color: #333;
+}
+
+.tree-table .expand-icon {
+  display: inline-block;
+  margin-right: 8px;
+  width: 12px;
+  text-align: center;
+  color: #999;
+  transition: transform 0.2s ease;
+}
+
+.tree-table .expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+.tree-table .loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Типы узлов */
+.node-type {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.node-type-node {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.node-type-leaf {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.node-type-account {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+
+/* Состояния загрузки */
+.loading-state,
+.error-state,
+.no-data-state {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+.error-state {
+  color: #ff4d4f;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+/* Заголовок страницы */
+h1 {
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.page-description {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+/* Контейнер приложения */
+.app-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
