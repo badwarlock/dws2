@@ -92,6 +92,37 @@ body {
   }
 }
 
+/* Строки состояний (loading, error, no-data) */
+.loading-row,
+.error-row,
+.no-data-row {
+  background-color: #fafafa;
+}
+
+.loading-row td,
+.error-row td,
+.no-data-row td {
+  padding: 8px 16px;
+}
+
+.loading-row:hover,
+.error-row:hover,
+.no-data-row:hover {
+  background-color: #fafafa;
+  cursor: default;
+}
+
+/* Маленький спиннер для строк загрузки */
+.loading-spinner-small {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #1890ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 /* Типы узлов */
 .node-type {
   display: inline-block;

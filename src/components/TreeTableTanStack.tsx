@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, Fragment } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -201,7 +201,7 @@ const TreeTableRowWithData = memo<TreeTableRowWithDataProps>(
     // Загружаем дочерние элементы, если узел раскрыт
     const shouldFetch = isExpanded && node.type !== 'account';
 
-    const { data: childData } = useTreeLevel(
+    const { data: childData, isLoading, error } = useTreeLevel(
       { depth: childDepth, path_part: pathPart },
       {
         enabled: shouldFetch,
@@ -216,19 +216,57 @@ const TreeTableRowWithData = memo<TreeTableRowWithDataProps>(
     }, [childData, addTreeData]);
 
     const canExpand = node.type !== 'account';
+    const indent = (node.depth) * 20; // Отступ для дочерних элементов
 
     return (
-      <tr
-        className={canExpand ? 'expandable' : ''}
-        onMouseEnter={onMouseEnter}
-        onClick={canExpand ? onClick : undefined}
-      >
-        {row.getVisibleCells().map((cell: any) => (
-          <td key={cell.id}>
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </td>
-        ))}
-      </tr>
+      <Fragment>
+        {/* Основная строка узла */}
+        <tr
+          className={canExpand ? 'expandable' : ''}
+          onMouseEnter={onMouseEnter}
+          onClick={canExpand ? onClick : undefined}
+        >
+          {row.getVisibleCells().map((cell: any) => (
+            <td key={cell.id}>
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </td>
+          ))}
+        </tr>
+
+        {/* Строка загрузки */}
+        {isExpanded && isLoading && (
+          <tr className="loading-row">
+            <td colSpan={4}>
+              <div style={{ paddingLeft: `${indent}px`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="loading-spinner-small"></span>
+                <span style={{ color: '#666', fontSize: '13px' }}>Загрузка дочерних элементов...</span>
+              </div>
+            </td>
+          </tr>
+        )}
+
+        {/* Строка ошибки */}
+        {isExpanded && error && (
+          <tr className="error-row">
+            <td colSpan={4}>
+              <div style={{ paddingLeft: `${indent}px`, color: '#ff4d4f', fontSize: '13px' }}>
+                ⚠️ Ошибка загрузки: {(error as Error).message}
+              </div>
+            </td>
+          </tr>
+        )}
+
+        {/* Строка "нет данных" */}
+        {isExpanded && !isLoading && !error && childData && (!childData.data || childData.data.length === 0) && (
+          <tr className="no-data-row">
+            <td colSpan={4}>
+              <div style={{ paddingLeft: `${indent}px`, color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
+                📭 Нет дочерних элементов
+              </div>
+            </td>
+          </tr>
+        )}
+      </Fragment>
     );
   }
 );

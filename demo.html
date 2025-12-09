@@ -161,6 +161,40 @@
             font-size: 13px;
             color: #666;
         }
+
+        .loading-spinner-small {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1890ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-row,
+        .error-row,
+        .no-data-row {
+            background-color: #fafafa;
+        }
+
+        .loading-row td,
+        .error-row td,
+        .no-data-row td {
+            padding: 8px 16px;
+        }
+
+        .loading-row:hover,
+        .error-row:hover,
+        .no-data-row:hover {
+            background-color: #fafafa;
+            cursor: default;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -261,6 +295,9 @@
         let allNodes = new Map();
         let expandedPaths = new Set();
         let prefetchedPaths = new Set();
+        let loadingPaths = new Set(); // Узлы, чьи дочерние элементы загружаются
+        let errorPaths = new Map(); // Узлы с ошибками загрузки
+        let noDataPaths = new Set(); // Узлы без дочерних элементов
 
         // Загрузка данных (симуляция)
         async function fetchData(depth, pathPart = '') {
@@ -309,11 +346,29 @@
             const childDepth = node.depth + 1;
             const pathPart = node.path.endsWith('/') ? node.path : node.path + '/';
 
-            const result = await fetchData(childDepth, pathPart);
-            if (result.data) {
-                result.data.forEach(child => allNodes.set(child.path, child));
-                render();
+            // Устанавливаем состояние загрузки
+            loadingPaths.add(node.path);
+            errorPaths.delete(node.path);
+            noDataPaths.delete(node.path);
+            render();
+
+            try {
+                const result = await fetchData(childDepth, pathPart);
+
+                loadingPaths.delete(node.path);
+
+                if (result.data && result.data.length > 0) {
+                    result.data.forEach(child => allNodes.set(child.path, child));
+                } else {
+                    // Нет дочерних элементов
+                    noDataPaths.add(node.path);
+                }
+            } catch (error) {
+                loadingPaths.delete(node.path);
+                errorPaths.set(node.path, error.message || 'Ошибка загрузки данных');
             }
+
+            render();
         }
 
         // Проверка видимости узла
@@ -342,9 +397,13 @@
             tbody.innerHTML = nodes.map(node => {
                 const canExpand = node.type !== 'account';
                 const isExpanded = expandedPaths.has(node.path);
+                const isLoading = loadingPaths.has(node.path);
+                const hasError = errorPaths.has(node.path);
+                const hasNoData = noDataPaths.has(node.path);
                 const indent = (node.depth - 1) * 20;
+                const childIndent = node.depth * 20;
 
-                return `
+                let html = `
                     <tr class="${canExpand ? 'expandable' : ''}"
                         ${canExpand ? `onclick="toggleNode('${node.path}')"` : ''}
                         ${canExpand ? `onmouseenter="prefetchNode(${JSON.stringify(node).replace(/"/g, '&quot;')})"` : ''}>
@@ -361,6 +420,49 @@
                         <td>${node.depth}</td>
                     </tr>
                 `;
+
+                // Добавляем строку загрузки
+                if (isExpanded && isLoading) {
+                    html += `
+                        <tr class="loading-row">
+                            <td colspan="4">
+                                <div style="padding-left: ${childIndent}px; display: flex; align-items: center; gap: 8px;">
+                                    <span class="loading-spinner-small"></span>
+                                    <span style="color: #666; font-size: 13px;">Загрузка дочерних элементов...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                // Добавляем строку ошибки
+                if (isExpanded && hasError) {
+                    const errorMsg = errorPaths.get(node.path);
+                    html += `
+                        <tr class="error-row">
+                            <td colspan="4">
+                                <div style="padding-left: ${childIndent}px; color: #ff4d4f; font-size: 13px;">
+                                    ⚠️ Ошибка загрузки: ${errorMsg}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                // Добавляем строку "нет данных"
+                if (isExpanded && hasNoData && !isLoading && !hasError) {
+                    html += `
+                        <tr class="no-data-row">
+                            <td colspan="4">
+                                <div style="padding-left: ${childIndent}px; color: #999; font-size: 13px; font-style: italic;">
+                                    📭 Нет дочерних элементов
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                return html;
             }).join('');
 
             updateStats();
@@ -395,6 +497,9 @@
             allNodes.clear();
             expandedPaths.clear();
             prefetchedPaths.clear();
+            loadingPaths.clear();
+            errorPaths.clear();
+            noDataPaths.clear();
             init();
         }
 
