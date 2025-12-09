@@ -8,9 +8,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://my-url';
 
 /**
  * Режим использования mock данных (для тестирования без реального API)
- * Установите VITE_USE_MOCK_DATA=true в .env файле для использования mock данных
+ * По умолчанию используем mock данные для разработки
  */
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+const USE_MOCK_DATA =
+  import.meta.env.VITE_USE_MOCK_DATA === 'true' ||
+  !import.meta.env.VITE_USE_MOCK_DATA; // Если не установлено, используем mock
 
 /**
  * Функция для запроса данных дерева
@@ -20,11 +22,12 @@ export async function fetchTreeData(params: TreeApiParams): Promise<TreeApiRespo
 
   // Если включен режим mock данных, используем локальные данные
   if (USE_MOCK_DATA) {
-    console.log('[MOCK MODE] Fetching mock data:', { depth, path_part });
+    console.log('[MOCK MODE] Fetching data for:', { depth, path_part });
     return fetchMockTreeData(depth, path_part);
   }
 
   // Реальный API запрос
+  console.log('[API MODE] Fetching from:', API_BASE_URL, { depth, path_part });
   const url = new URL(`${API_BASE_URL}/account`);
   url.searchParams.append('depth', depth.toString());
 

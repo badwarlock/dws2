@@ -84,14 +84,20 @@ export async function fetchMockTreeData(
   depth: number,
   pathPart?: string
 ): Promise<TreeApiResponse> {
-  // Симулируем задержку сети (300-800ms)
-  const delay = Math.random() * 500 + 300;
+  console.log('[Mock Data] Request:', { depth, pathPart });
+
+  // Симулируем задержку сети (200-500ms для быстрого отклика)
+  const delay = Math.random() * 300 + 200;
   await new Promise((resolve) => setTimeout(resolve, delay));
 
-  // Симулируем редкие ошибки (5% вероятность)
-  if (Math.random() < 0.05) {
-    throw new Error('Ошибка сети: не удалось загрузить данные');
-  }
+  // Симулируем редкие ошибки (1% вероятность - очень редко)
+  // Закомментируйте следующие 3 строки, чтобы полностью отключить ошибки
+  // if (Math.random() < 0.01) {
+  //   throw new Error('Ошибка сети: не удалось загрузить данные');
+  // }
 
-  return generateMockData(depth, pathPart);
+  const result = generateMockData(depth, pathPart);
+  console.log('[Mock Data] Response:', result);
+
+  return result;
 }

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Table Component - Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #e6f7ff;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #0958d9;
+        }
+
+        .tree-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .tree-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .tree-table thead {
+            background-color: #fafafa;
+            border-bottom: 2px solid #e8e8e8;
+        }
+
+        .tree-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .tree-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .tree-table tbody tr:hover {
+            background-color: #fafafa;
+        }
+
+        .tree-table tbody tr.expandable {
+            cursor: pointer;
+        }
+
+        .tree-table td {
+            padding: 12px 16px;
+            color: #333;
+        }
+
+        .expand-icon {
+            display: inline-block;
+            margin-right: 8px;
+            width: 12px;
+            text-align: center;
+            color: #999;
+            transition: transform 0.2s ease;
+        }
+
+        .node-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .node-type-node {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .node-type-leaf {
+            background-color: #f6ffed;
+            color: #52c41a;
+        }
+
+        .node-type-account {
+            background-color: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .loading-state {
+            padding: 40px;
+            text-align: center;
+            color: #666;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 8px 16px;
+            margin-right: 8px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #40a9ff;
+        }
+
+        button:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tree Table Component</h1>
+        <p class="description">
+            Иерархическое дерево с lazy loading и prefetching. Наведите курсор для предзагрузки, кликните для раскрытия узлов.
+        </p>
+
+        <div class="info-box">
+            <strong>ℹ️ Режим:</strong> Mock данные (демонстрация) • Проверьте консоль браузера для логов
+        </div>
+
+        <div class="controls">
+            <button onclick="collapseAll()">Свернуть все</button>
+            <button onclick="expandAll()">Развернуть все</button>
+            <button onclick="reload()">Перезагрузить</button>
+            <div class="stats">
+                <span id="stats">Узлов загружено: 0 | Раскрыто: 0</span>
+            </div>
+        </div>
+
+        <div class="tree-table-container">
+            <table class="tree-table" id="treeTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Path</th>
+                        <th>Depth</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="4" class="loading-state">Загрузка...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Mock данные
+        const mockData = {
+            1: {
+                '': [
+                    { id: 1, type: 'node', path: '1', depth: 1 },
+                    { id: 2, type: 'node', path: '2', depth: 1 },
+                    { id: 3, type: 'leaf', path: '3', depth: 1 }
+                ]
+            },
+            2: {
+                '1/': [
+                    { id: 11, type: 'node', path: '1/11', depth: 2 },
+                    { id: 12, type: 'leaf', path: '1/12', depth: 2 }
+                ],
+                '2/': [
+                    { id: 21, type: 'leaf', path: '2/21', depth: 2 },
+                    { id: 22, type: 'node', path: '2/22', depth: 2 }
+                ],
+                '3/': [
+                    { id: 31, type: 'account', path: '3/31', depth: 2 },
+                    { id: 32, type: 'account', path: '3/32', depth: 2 },
+                    { id: 33, type: 'account', path: '3/33', depth: 2 }
+                ]
+            },
+            3: {
+                '1/11/': [
+                    { id: 111, type: 'leaf', path: '1/11/111', depth: 3 },
+                    { id: 112, type: 'leaf', path: '1/11/112', depth: 3 }
+                ],
+                '1/12/': [
+                    { id: 121, type: 'account', path: '1/12/121', depth: 3 },
+                    { id: 122, type: 'account', path: '1/12/122', depth: 3 }
+                ],
+                '2/21/': [],
+                '2/22/': [
+                    { id: 221, type: 'leaf', path: '2/22/221', depth: 3 }
+                ]
+            },
+            4: {
+                '1/11/111/': [
+                    { id: 1111, type: 'account', path: '1/11/111/1111', depth: 4 },
+                    { id: 1112, type: 'account', path: '1/11/111/1112', depth: 4 }
+                ],
+                '1/11/112/': [
+                    { id: 1121, type: 'account', path: '1/11/112/1121', depth: 4 }
+                ],
+                '2/22/221/': [
+                    { id: 2211, type: 'account', path: '2/22/221/2211', depth: 4 },
+                    { id: 2212, type: 'account', path: '2/22/221/2212', depth: 4 },
+                    { id: 2213, type: 'account', path: '2/22/221/2213', depth: 4 }
+                ]
+            }
+        };
+
+        // Состояние приложения
+        let allNodes = new Map();
+        let expandedPaths = new Set();
+        let prefetchedPaths = new Set();
+
+        // Загрузка данных (симуляция)
+        async function fetchData(depth, pathPart = '') {
+            console.log('[Mock] Fetching:', { depth, pathPart });
+
+            // Симуляция задержки
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const data = mockData[depth]?.[pathPart] || [];
+            console.log('[Mock] Response:', { count: data.length, data });
+
+            return { count: data.length, data: data.length > 0 ? data : null };
+        }
+
+        // Prefetch при ховере
+        async function prefetchNode(node) {
+            if (node.type === 'account' || prefetchedPaths.has(node.path)) return;
+
+            console.log('[Prefetch] Loading children for:', node.path);
+            prefetchedPaths.add(node.path);
+
+            const childDepth = node.depth + 1;
+            const pathPart = node.path.endsWith('/') ? node.path : node.path + '/';
+
+            const result = await fetchData(childDepth, pathPart);
+            if (result.data) {
+                result.data.forEach(child => allNodes.set(child.path, child));
+            }
+        }
+
+        // Переключение раскрытия узла
+        function toggleNode(path) {
+            if (expandedPaths.has(path)) {
+                expandedPaths.delete(path);
+            } else {
+                expandedPaths.add(path);
+                loadChildren(allNodes.get(path));
+            }
+            render();
+        }
+
+        // Загрузка дочерних узлов
+        async function loadChildren(node) {
+            if (node.type === 'account') return;
+
+            const childDepth = node.depth + 1;
+            const pathPart = node.path.endsWith('/') ? node.path : node.path + '/';
+
+            const result = await fetchData(childDepth, pathPart);
+            if (result.data) {
+                result.data.forEach(child => allNodes.set(child.path, child));
+                render();
+            }
+        }
+
+        // Проверка видимости узла
+        function isVisible(node) {
+            if (node.depth === 1) return true;
+
+            const pathParts = node.path.split('/');
+            pathParts.pop();
+            const parentPath = pathParts.join('/');
+
+            return expandedPaths.has(parentPath);
+        }
+
+        // Рендеринг таблицы
+        function render() {
+            const tbody = document.getElementById('tableBody');
+            const nodes = Array.from(allNodes.values())
+                .filter(isVisible)
+                .sort((a, b) => a.path.localeCompare(b.path));
+
+            if (nodes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="loading-state">Нет данных</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = nodes.map(node => {
+                const canExpand = node.type !== 'account';
+                const isExpanded = expandedPaths.has(node.path);
+                const indent = (node.depth - 1) * 20;
+
+                return `
+                    <tr class="${canExpand ? 'expandable' : ''}"
+                        ${canExpand ? `onclick="toggleNode('${node.path}')"` : ''}
+                        ${canExpand ? `onmouseenter="prefetchNode(${JSON.stringify(node).replace(/"/g, '&quot;')})"` : ''}>
+                        <td>
+                            <div style="padding-left: ${indent}px; display: flex; align-items: center;">
+                                ${canExpand ? `<span class="expand-icon">${isExpanded ? '▼' : '▶'}</span>` : ''}
+                                ${node.id}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="node-type node-type-${node.type}">${node.type}</span>
+                        </td>
+                        <td>${node.path}</td>
+                        <td>${node.depth}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            updateStats();
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            const stats = `Узлов загружено: ${allNodes.size} | Раскрыто: ${expandedPaths.size}`;
+            document.getElementById('stats').textContent = stats;
+        }
+
+        // Свернуть все
+        function collapseAll() {
+            expandedPaths.clear();
+            render();
+        }
+
+        // Развернуть все (только первый уровень)
+        async function expandAll() {
+            const rootNodes = Array.from(allNodes.values()).filter(n => n.depth === 1);
+            for (const node of rootNodes) {
+                if (node.type !== 'account') {
+                    expandedPaths.add(node.path);
+                    await loadChildren(node);
+                }
+            }
+            render();
+        }
+
+        // Перезагрузка
+        function reload() {
+            allNodes.clear();
+            expandedPaths.clear();
+            prefetchedPaths.clear();
+            init();
+        }
+
+        // Инициализация
+        async function init() {
+            console.log('=== Tree Table Demo Started ===');
+            const result = await fetchData(1);
+
+            if (result.data) {
+                result.data.forEach(node => allNodes.set(node.path, node));
+                render();
+            }
+        }
+
+        // Запуск при загрузке страницы
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

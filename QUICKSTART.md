@@ -1,6 +1,23 @@
 # 🚀 Быстрый старт (Quick Start)
 
-## Запуск проекта за 3 шага
+## ⚡ Самый быстрый способ (без установки)
+
+Просто откройте файл **demo.html** в браузере!
+
+```bash
+# Откройте файл в браузере
+open demo.html        # macOS
+xdg-open demo.html    # Linux
+start demo.html       # Windows
+
+# Или перетащите demo.html в окно браузера
+```
+
+**Готово!** 🎉 Компонент сразу работает с демо-данными.
+
+---
+
+## 📦 Запуск проекта за 3 шага (с npm)
 
 ### 1. Установите зависимости
 ```bash
@@ -109,15 +126,22 @@ npm install
 
 ## 📚 Дополнительная документация
 
+- **[TESTING.md](./TESTING.md)** - Подробное руководство по тестированию
 - **[README.md](./README.md)** - Полная документация компонента
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Руководство по разработке
-- **[src/api/mockData.ts](./src/api/mockData.ts)** - Структура mock данных
+- **[demo.html](./demo.html)** - Демо без установки зависимостей
+- **[test-mock-data.js](./test-mock-data.js)** - Тест mock данных
 
 ---
 
 ## 🎯 Основные команды
 
 ```bash
+# Тестирование без npm
+open demo.html           # Демо в браузере
+node test-mock-data.js   # Тест mock данных
+
+# С npm
 npm run dev      # Запуск dev-сервера
 npm run build    # Сборка для продакшена
 npm run preview  # Предпросмотр production сборки
@@ -125,4 +149,29 @@ npm run preview  # Предпросмотр production сборки
 
 ---
 
-**Готово к работе!** Если возникли вопросы, смотрите [DEVELOPMENT.md](./DEVELOPMENT.md)
+## 🧪 Проверка работы
+
+### Сценарий 1: Demo.html
+1. Откройте `demo.html` в браузере
+2. Увидите таблицу с 3 узлами
+3. Кликните на узел `1` → раскроется
+4. Наведите курсор на узлы → увидите prefetch в консоли
+
+### Сценарий 2: Test mock data
+```bash
+node test-mock-data.js
+# Должны увидеть: ✅ Все тесты пройдены!
+```
+
+### Сценарий 3: Vite dev server
+```bash
+npm install
+npm run dev
+# Откройте http://localhost:5173
+```
+
+---
+
+**Готово к работе!** Если возникли вопросы, смотрите:
+- [TESTING.md](./TESTING.md) - Детальное руководство по тестированию
+- [DEVELOPMENT.md](./DEVELOPMENT.md) - Руководство разработчика
